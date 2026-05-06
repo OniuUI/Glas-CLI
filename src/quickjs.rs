@@ -55,7 +55,7 @@ fn temp_runner_path() -> PathBuf {
 /// 5. Calls `std.exit(0)` on completion
 ///
 /// The runner uses QuickJS's `--std` flag so `std` module is available.
-pub fn build_runner_script(modules: &[(&str, &str)], user_code: &str) -> String {
+pub fn build_runner_script(modules: &[(String, String)], user_code: &str) -> String {
     let mut s = String::with_capacity(65536);
 
     // ── Preamble: QuickJS std import + browser API shims ──
@@ -196,8 +196,7 @@ var GlassHouse = {
 "###);
 
     // ── Load GlassHouse module sources ──
-    for (module in modules) {
-        let (name, source) = module;
+    for (name, source) in modules {
         s.push_str(&format!("\n// ====== Module: {} ======\n", name));
         s.push_str(source);
         s.push('\n');
@@ -217,7 +216,7 @@ var GlassHouse = {
 /// Run JavaScript code through QuickJS with no GlassHouse modules.
 /// Returns stdout on success, error string on failure.
 pub fn eval(code: &str) -> Result<String, String> {
-    let modules: Vec<(&str, &str)> = Vec::new();
+    let modules: Vec<(String, String)> = Vec::new();
     eval_with_modules(code, &modules)
 }
 
@@ -225,7 +224,7 @@ pub fn eval(code: &str) -> Result<String, String> {
 /// `modules` is a list of (module_name, source_code) pairs.
 /// The modules are loaded in order before the user code executes.
 /// Returns stdout on success, error string on failure.
-pub fn eval_with_modules(code: &str, modules: &[(&str, &str)]) -> Result<String, String> {
+pub fn eval_with_modules(code: &str, modules: &[(String, String)]) -> Result<String, String> {
     let runner = build_runner_script(modules, code);
     let tmp = temp_runner_path();
 

@@ -563,7 +563,8 @@ fn build_dev(cwd: &Path) {
     // Add any framework files not in the ordered list
     for fp in &sources.framework {
         let name = fp.file_name().unwrap_or_default().to_string_lossy();
-        if !framework_order.contains(&name.as_str().as_ref()) {
+        let name_str: &str = name.as_ref();
+        if !framework_order.iter().any(|&n| n == name_str) {
             if let Ok(src) = fs::read_to_string(fp) {
                 bundle.push_str(&src);
                 bundle.push('\n');

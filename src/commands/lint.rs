@@ -386,8 +386,8 @@ function lintSource(source, filename) {{
     }}
 
     // Type safety: Pebble/Shine without propTypes
-    if (/\bnew\s+Pebble\s*\(/.test(s) || /\bPebble\s*\(\s*\{/.test(s) ||
-        /\bnew\s+Shine\s*\(/.test(s) || /\bShine\s*\(\s*\{/.test(s)) {{
+    if (/\bnew\s+Pebble\s*\(/.test(s) || /\bPebble\s*\(\s*\{{/.test(s) ||
+        /\bnew\s+Shine\s*\(/.test(s) || /\bShine\s*\(\s*\{{/.test(s)) {{
         if (!/\bpropTypes\b/.test(s)) {{
             violations.push({{
                 file: filename, line: 0, col: 0,
@@ -407,7 +407,7 @@ function lintSource(source, filename) {{
     }}
 
     // Handler logic in Pebbles
-    if (/\bnew\s+Pebble\s*\(/.test(s) || /\bPebble\s*\(\s*\{/.test(s)) {{
+    if (/\bnew\s+Pebble\s*\(/.test(s) || /\bPebble\s*\(\s*\{{/.test(s)) {{
         if (/\bfetch\s*\(/.test(s)) {{
             violations.push({{
                 file: filename, line: 0, col: 0,
