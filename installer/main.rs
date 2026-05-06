@@ -253,18 +253,18 @@ fn download_glasshouse(version: &str, dest_dir: &Path) -> io::Result<()> {
 
 fn download_file(url: &str, dest: &Path) -> io::Result<()> {
     if let Some(parent) = dest.parent() { let _ = fs::create_dir_all(parent); }
+    let script = format!(
+        "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\r\nInvoke-WebRequest -Uri '{}' -OutFile '{}'\r\n",
+        url, dest.display()
+    );
+    let ps1 = std::env::temp_dir().join("glas-installer-fetch.ps1");
+    fs::write(&ps1, &script)?;
     let status = if cfg!(windows) {
-        Command::new("powershell")
-            .args(["-Command", &format!(
-                "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}'",
-                url, dest.display()
-            )])
-            .status()
+        Command::new("powershell").args(["-ExecutionPolicy", "Bypass", "-File"]).arg(&ps1).status()
     } else {
-        Command::new("sh")
-            .args(["-c", &format!("curl -L -o '{}' '{}'", dest.display(), url)])
-            .status()
+        Command::new("sh").args(["-c", &format!("curl -L -o '{}' '{}'", dest.display(), url)]).status()
     };
+    let _ = fs::remove_file(&ps1);
     match status {
         Ok(s) if s.success() => Ok(()),
         Ok(s) => Err(io::Error::new(io::ErrorKind::Other, format!("exit code {}", s.code().unwrap_or(1)))),
@@ -274,18 +274,18 @@ fn download_file(url: &str, dest: &Path) -> io::Result<()> {
 
 fn extract_zip(zip_path: &Path, dest_dir: &Path) -> io::Result<()> {
     fs::create_dir_all(dest_dir)?;
+    let script = format!(
+        "Expand-Archive -Path '{}' -DestinationPath '{}' -Force\r\n",
+        zip_path.display(), dest_dir.display()
+    );
+    let ps1 = std::env::temp_dir().join("glas-installer-extract.ps1");
+    fs::write(&ps1, &script)?;
     let status = if cfg!(windows) {
-        Command::new("powershell")
-            .args(["-Command", &format!(
-                "Expand-Archive -Path '{}' -DestinationPath '{}' -Force",
-                zip_path.display(), dest_dir.display()
-            )])
-            .status()
+        Command::new("powershell").args(["-ExecutionPolicy", "Bypass", "-File"]).arg(&ps1).status()
     } else {
-        Command::new("sh")
-            .args(["-c", &format!("unzip -o '{}' -d '{}'", zip_path.display(), dest_dir.display())])
-            .status()
+        Command::new("sh").args(["-c", &format!("unzip -o '{}' -d '{}'", zip_path.display(), dest_dir.display())]).status()
     };
+    let _ = fs::remove_file(&ps1);
     match status {
         Ok(s) if s.success() => Ok(()),
         Ok(s) => Err(io::Error::new(io::ErrorKind::Other, format!("exit code {}", s.code().unwrap_or(1)))),

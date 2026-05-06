@@ -276,7 +276,6 @@ GlassHouse.handler('storage', {
 // ── GitHub release URLs ──
 
 const GLASSHOUSE_RELEASES: &str = "https://github.com/OniuUI/GlassHouse/releases";
-const GLASSHOUSE_ASSET: &str = "glasshouse.zip";
 
 pub fn init(name: &str) {
     init_with_version(name, "latest");
@@ -357,17 +356,16 @@ fn fetch_glasshouse(version: &str, dest_dir: &Path) -> Result<(), String> {
         version.to_string()
     };
 
-    let url = if version == "latest" || version == "nightly" {
-        format!(
-            "{}/latest/download/{}",
-            GLASSHOUSE_RELEASES, GLASSHOUSE_ASSET
-        )
+    let asset_name = if version == "latest" || version == "nightly" {
+        "glasshouse.zip".to_string()
     } else {
-        format!(
-            "{}/download/v{}/glasshouse-v{}.zip",
-            GLASSHOUSE_RELEASES, version, version
-        )
+        format!("glasshouse-v{}.zip", version)
     };
+
+    let url = format!(
+        "{}/download/{}/{}",
+        GLASSHOUSE_RELEASES, real_version, asset_name
+    );
 
     let tmp = std::env::temp_dir().join(format!("glasshouse-{}.zip", version));
     utils::fetch_release(&url, &tmp).map_err(|e| {
