@@ -11,7 +11,7 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
 
-const VERSION: &str = "2.0.0";
+const VERSION: &str = "0.1.0";
 const GLAS_EXE: &str = "glas.exe";
 const GLAS_BAT: &str = "glas.bat";
 const GLAS_UNINSTALL: &str = "glas-uninstall.ps1";

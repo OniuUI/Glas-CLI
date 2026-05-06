@@ -8,7 +8,7 @@ pub mod quickjs;
 
 use crate::utils::parse_port;
 
-const VERSION: &str = "2.0.0";
+const VERSION: &str = "0.1.0";
 
 fn parse_str_flag(args: &[String], flag: &str) -> Option<String> {
     for i in 0..args.len() {
