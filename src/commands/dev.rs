@@ -291,7 +291,7 @@ fn handle_dev(
     let path = rp.trim_start_matches('/');
     let file_path = cwd.join(path);
 
-    // Reject .js files in src/ and packages/
+    // Reject .js files in src/ and packages/ (TS/TSX redirect)
     if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
         if ext == "js" {
             // Check if the file is in src/ or packages/
@@ -300,7 +300,19 @@ fn handle_dev(
             let pkg_prefix = cwd.join("packages").to_string_lossy().to_string();
 
             if path_str.starts_with(&src_prefix) || path_str.starts_with(&pkg_prefix) {
-                // Forbidden .js in user code
+                // Try .ts redirect first
+                let ts_path = file_path.with_extension("ts");
+                if ts_path.exists() {
+                    serve_compiled_ts(stream, cwd, &ts_path, state);
+                    return;
+                }
+                // Try .tsx redirect
+                let tsx_path = file_path.with_extension("tsx");
+                if tsx_path.exists() {
+                    serve_compiled_ts(stream, cwd, &tsx_path, state);
+                    return;
+                }
+                // Neither .ts nor .tsx exists — 403
                 let body = format!(
                     "JavaScript files not allowed in user codebase. Use TypeScript (.ts/.tsx).\n\nFile: {}\n\nConvert this file to .ts or .tsx.",
                     path
