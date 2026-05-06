@@ -253,28 +253,44 @@ fn download_glasshouse(version: &str, dest_dir: &Path) -> io::Result<()> {
 
 fn download_file(url: &str, dest: &Path) -> io::Result<()> {
     if let Some(parent) = dest.parent() { let _ = fs::create_dir_all(parent); }
-    let cmd = if cfg!(windows) {
-        format!(
-            "powershell -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}'\"",
-            url, dest.display()
-        )
+    let status = if cfg!(windows) {
+        Command::new("powershell")
+            .args(["-Command", &format!(
+                "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}'",
+                url, dest.display()
+            )])
+            .status()
     } else {
-        format!("curl -L -o '{}' '{}'", dest.display(), url)
+        Command::new("sh")
+            .args(["-c", &format!("curl -L -o '{}' '{}'", dest.display(), url)])
+            .status()
     };
-    run_shell_status(&cmd)
+    match status {
+        Ok(s) if s.success() => Ok(()),
+        Ok(s) => Err(io::Error::new(io::ErrorKind::Other, format!("exit code {}", s.code().unwrap_or(1)))),
+        Err(e) => Err(e),
+    }
 }
 
 fn extract_zip(zip_path: &Path, dest_dir: &Path) -> io::Result<()> {
     fs::create_dir_all(dest_dir)?;
-    let cmd = if cfg!(windows) {
-        format!(
-            "powershell -Command \"Expand-Archive -Path '{}' -DestinationPath '{}' -Force\"",
-            zip_path.display(), dest_dir.display()
-        )
+    let status = if cfg!(windows) {
+        Command::new("powershell")
+            .args(["-Command", &format!(
+                "Expand-Archive -Path '{}' -DestinationPath '{}' -Force",
+                zip_path.display(), dest_dir.display()
+            )])
+            .status()
     } else {
-        format!("unzip -o '{}' -d '{}'", zip_path.display(), dest_dir.display())
+        Command::new("sh")
+            .args(["-c", &format!("unzip -o '{}' -d '{}'", zip_path.display(), dest_dir.display())])
+            .status()
     };
-    run_shell_status(&cmd)
+    match status {
+        Ok(s) if s.success() => Ok(()),
+        Ok(s) => Err(io::Error::new(io::ErrorKind::Other, format!("exit code {}", s.code().unwrap_or(1)))),
+        Err(e) => Err(e),
+    }
 }
 
 fn add_to_path(dir: &str) -> io::Result<()> {

@@ -117,15 +117,23 @@ pub fn fetch_github_releases(owner: &str, repo: &str) -> io::Result<Vec<(String,
     let url = format!("https://api.github.com/repos/{}/{}/releases", owner, repo);
     let tmp = std::env::temp_dir().join(format!("glas-{}-releases.json", repo));
 
-    let cmd = if cfg!(windows) {
-        format!(
-            "powershell -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}' -Headers @{{'User-Agent'='glas/2.0'}}\"",
-            url, tmp.display()
-        )
+    let status = if cfg!(windows) {
+        std::process::Command::new("powershell")
+            .args(["-Command", &format!(
+                "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}' -Headers @{{'User-Agent'='glas/2.0'}}",
+                url, tmp.display()
+            )])
+            .status()
     } else {
-        format!("curl -L -H 'User-Agent: glas/2.0' -o '{}' '{}'", tmp.display(), url)
+        std::process::Command::new("sh")
+            .args(["-c", &format!("curl -L -H 'User-Agent: glas/2.0' -o '{}' '{}'", tmp.display(), url)])
+            .status()
     };
-    run_shell_status(&cmd)?;
+    match status {
+        Ok(s) if s.success() => {},
+        Ok(s) => return Err(io::Error::new(io::ErrorKind::Other, format!("exit code {}", s.code().unwrap_or(1)))),
+        Err(e) => return Err(e),
+    }
 
     let raw = fs::read_to_string(&tmp).unwrap_or_default();
     let _ = fs::remove_file(&tmp);
@@ -170,12 +178,22 @@ pub fn latest_glasshouse_version() -> String {
 
 pub fn fetch_release(url: &str, dest: &Path) -> io::Result<()> {
     if let Some(parent) = dest.parent() { fs::create_dir_all(parent)?; }
-    let cmd = if cfg!(windows) {
-        format!("powershell -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}'\"", url, dest.display())
+    let status = if cfg!(windows) {
+        std::process::Command::new("powershell")
+            .args(["-Command", &format!(
+                "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}'", url, dest.display()
+            )])
+            .status()
     } else {
-        format!("curl -L -o '{}' '{}'", dest.display(), url)
+        std::process::Command::new("sh")
+            .args(["-c", &format!("curl -L -o '{}' '{}'", dest.display(), url)])
+            .status()
     };
-    run_shell_status(&cmd)
+    match status {
+        Ok(s) if s.success() => Ok(()),
+        Ok(s) => Err(io::Error::new(io::ErrorKind::Other, format!("exit code {}", s.code().unwrap_or(1)))),
+        Err(e) => Err(e),
+    }
 }
 
 pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> io::Result<()> {
