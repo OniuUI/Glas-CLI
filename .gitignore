@@ -1,0 +1,12 @@
+dist/
+artifacts/
+*.exe
+*.pdb
+.vs/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+node_modules/
