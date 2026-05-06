@@ -3,7 +3,7 @@ use std::path::Path;
 
 use crate::utils;
 
-const INDEX_HTML: &str = r#"<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Glass House</title><script src="glasshouse/glasshouse.js"></script><script src="glasshouse/types.js"></script><script src="glasshouse/dom.js"></script><script src="glasshouse/pebble.js"></script><script src="src/app.js"></script></head><body><div id="app"></div></body></html>"#;
+const INDEX_HTML: &str = r#"<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Glass House</title><script src="glasshouse/core/glasshouse.js"></script><script src="glasshouse/core/types.js"></script><script src="glasshouse/core/dom.js"></script><script src="glasshouse/blocks/pebble.js"></script><script src="src/app.js"></script></head><body><div id="app"></div></body></html>"#;
 const MAIN_CSS: &str = "*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{font-size:16px}body{font-family:system-ui,sans-serif;line-height:1.6;color:#111827;background:#fff;min-height:100vh}#app{min-height:100vh}";
 const APP_JS: &str = "(function(){'use strict';GlassHouse.ready(function(){console.log('Glass House ready.');});})();";
 

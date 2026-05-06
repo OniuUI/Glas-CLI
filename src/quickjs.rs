@@ -328,7 +328,7 @@ pub fn eval_with_input(code: &str, stdin_data: &str) -> Result<String, String> {
 
 /// Read GlassHouse module source files from `glasshouse/` directory in the project.
 /// Returns a Vec of (module_name, source_code) in the requested order.
-/// Each module is loaded from `glasshouse/{name}.js`.
+/// Each module is found by scanning glasshouse/ subdirectories for {name}.js.
 pub fn load_glasshouse_modules(
     cwd: &Path,
     module_names: &[&str],
@@ -340,14 +340,33 @@ pub fn load_glasshouse_modules(
 
     let mut modules = Vec::with_capacity(module_names.len());
     for name in module_names {
-        let file_path = glasshouse_dir.join(format!("{}.js", name));
-        let source = fs::read_to_string(&file_path).map_err(|e| {
-            format!(
-                "Failed to read glasshouse/{}.js: {}",
-                name, e
-            )
-        })?;
-        modules.push((name.to_string(), source));
+        let filename = format!("{}.js", name);
+        let mut found = None;
+
+        if let Ok(entries) = fs::read_dir(&glasshouse_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let candidate = path.join(&filename);
+                    if candidate.exists() {
+                        found = Some(candidate);
+                        break;
+                    }
+                }
+            }
+        }
+
+        match found {
+            Some(file_path) => {
+                let source = fs::read_to_string(&file_path).map_err(|e| {
+                    format!("Failed to read {}: {}", file_path.display(), e)
+                })?;
+                modules.push((name.to_string(), source));
+            }
+            None => {
+                return Err(format!("Module '{}' not found in glasshouse/", name));
+            }
+        }
     }
 
     Ok(modules)
