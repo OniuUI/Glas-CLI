@@ -9,9 +9,10 @@ const MAIN_CSS: &str = "*,*::before,*::after{box-sizing:border-box;margin:0;padd
 
 const APP_TSX: &str = r#"'use strict';
 
-GlassHouse.ready(function () {
+  GlassHouse.ready(function () {
   var Pebble = GlassHouse.require('pebble');
   var Shine = GlassHouse.require('shine');
+  var T = GlassHouse.require('types');
 
   try {
     var shine = GlassHouse.require('glass-shine');
@@ -26,10 +27,10 @@ GlassHouse.ready(function () {
 
   var app = new Pebble({
     propTypes: {
-      title: 'string'
+      title: T.string
     },
     stateTypes: {
-      count: 'number'
+      count: T.number
     },
     props: { title: 'Glass House' },
     state: { count: 0 },
@@ -144,7 +145,7 @@ GlassHouse.define('glass-shine', ['shine'], function (Shine) {
         text: '#111827', background: '#ffffff', primary: '#2563eb',
         secondary: '#7c3aed', muted: '#6b7280', heading: '#1f2937',
         link: '#2563eb', border: '#e5e7eb', buttonText: '#ffffff',
-        error: '#dc2626', success: '#16a34a', warning: '#f59e0b', focus: '#2563eb'
+        error: '#dc2626', success: '#16a34a', warning: '#b45309', focus: '#2563eb'
       },
       fonts: {
         body: 'system-ui, sans-serif', heading: 'system-ui, sans-serif',
