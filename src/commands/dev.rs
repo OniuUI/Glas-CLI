@@ -577,35 +577,31 @@ fn generate_dev_index_ts(cwd: &std::path::Path) -> String {
 
     let gh_dir = cwd.join("glasshouse");
     if gh_dir.exists() {
-        for name in &framework_order {
-            let fp = gh_dir.join(name);
-            if fp.exists() {
-                scripts.push_str(&format!(
-                    "  <script src=\"/glasshouse/{}\"></script>\n",
-                    name
-                ));
+        // Build a cache of (filename → relative path) by scanning subdirectories
+        let mut framework_files: Vec<(String, String)> = Vec::new();
+        if let Ok(walk) = utils::walk_dir(&gh_dir) {
+            for fp in walk {
+                if fp.extension().and_then(|e| e.to_str()) == Some("js") {
+                    let fname = fp.file_name().unwrap_or_default().to_string_lossy().to_string();
+                    let rel = fp.strip_prefix(cwd).unwrap_or(&fp).to_string_lossy().to_string().replace('\\', "/");
+                    framework_files.push((fname, rel));
+                }
             }
         }
-        // Any remaining .js files
-        if let Ok(es) = fs::read_dir(&gh_dir) {
-            let mut remaining: Vec<String> = es
-                .flatten()
-                .filter_map(|e| {
-                    let n = e.file_name().to_string_lossy().to_string();
-                    if n.ends_with(".js") && !framework_order.contains(&n.as_str().as_ref()) {
-                        Some(n)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-            remaining.sort();
-            for n in &remaining {
-                scripts.push_str(&format!(
-                    "  <script src=\"/glasshouse/{}\"></script>\n",
-                    n
-                ));
+
+        // Add files in dependency order first
+        for name in &framework_order {
+            if let Some(idx) = framework_files.iter().position(|(n, _)| n == *name) {
+                let rel = &framework_files[idx].1;
+                scripts.push_str(&format!("  <script src=\"/{}\"></script>\n", rel));
+                framework_files.remove(idx);
             }
+        }
+
+        // Add any remaining framework files (alphabetically)
+        framework_files.sort_by(|a, b| a.1.cmp(&b.1));
+        for (_, rel) in &framework_files {
+            scripts.push_str(&format!("  <script src=\"/{}\"></script>\n", rel));
         }
     }
 
@@ -623,10 +619,10 @@ fn generate_dev_index_ts(cwd: &std::path::Path) -> String {
                 .collect();
             src_files.sort();
             for fp in &src_files {
-                let rel = fp.strip_prefix(cwd).unwrap_or(fp);
+                let rel = fp.strip_prefix(cwd).unwrap_or(fp).to_string_lossy().replace('\\', "/");
                 scripts.push_str(&format!(
                     "  <script src=\"/{}\"></script>\n",
-                    rel.to_string_lossy()
+                    rel
                 ));
             }
         }
@@ -646,10 +642,10 @@ fn generate_dev_index_ts(cwd: &std::path::Path) -> String {
                 .collect();
             pkg_files.sort();
             for fp in &pkg_files {
-                let rel = fp.strip_prefix(cwd).unwrap_or(fp);
+                let rel = fp.strip_prefix(cwd).unwrap_or(fp).to_string_lossy().replace('\\', "/");
                 scripts.push_str(&format!(
                     "  <script src=\"/{}\"></script>\n",
-                    rel.to_string_lossy()
+                    rel
                 ));
             }
         }
