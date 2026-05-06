@@ -61,7 +61,7 @@ pub fn build_runner_script(modules: &[(String, String)], user_code: &str) -> Str
     // ── Preamble: QuickJS std import + browser API shims ──
     s.push_str(r###"
 'use strict';
-import * as std from 'std';
+// std, os, and bjson are available as globals when --std is used
 
 // --- Browser API Shims for QuickJS ---
 var global = globalThis;
