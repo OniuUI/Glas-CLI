@@ -3,6 +3,7 @@ artifacts/
 *.exe
 *.pdb
 *.res
+RC*
 .vs/
 *.user
 *.suo
