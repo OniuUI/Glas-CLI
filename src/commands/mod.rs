@@ -9,6 +9,7 @@ pub use upgrade::upgrade;
 pub use run::run;
 pub use lint::{run as lint_run, parse_lint_flags, LintFlags};
 pub use test::{run as test_run, parse_test_flags, TestFlags};
+pub use update::run as update_run;
 
 pub mod init;
 pub mod serve;
@@ -22,3 +23,4 @@ pub mod run;
 pub mod lint;
 pub mod test;
 pub mod glasshouse;
+pub mod update;

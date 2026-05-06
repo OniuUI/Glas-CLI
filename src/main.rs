@@ -8,7 +8,7 @@ pub mod quickjs;
 
 use crate::utils::parse_port;
 
-const VERSION: &str = "0.1.0";
+pub const VERSION: &str = "0.1.0";
 
 fn parse_str_flag(args: &[String], flag: &str) -> Option<String> {
     for i in 0..args.len() {
@@ -112,6 +112,11 @@ fn main() {
             let sub = args.get(2).cloned().unwrap_or_else(|| "list".to_string());
             commands::glasshouse::run(&sub, &args[2..]);
         }
+        "update" => {
+            let check = args.iter().any(|a| a == "--check");
+            let gh = args.iter().any(|a| a == "--glasshouse");
+            commands::update_run(check, gh);
+        }
         "help" | "--help" | "-h" => help(),
         "version" | "--version" | "-v" => println!("glas v{}", VERSION),
         other => {
@@ -155,6 +160,7 @@ fn help() {
     println!("  run <script>                 Run a project script");
     println!("  glasshouse list              List available GlassHouse releases");
     println!("  glasshouse cache [--update]  Show or manage cached framework");
+    println!("  update [--check] [--glasshouse]  Self-update CLI or cached framework");
     println!("  help                         Show this help");
     println!("  version                      Show version");
     println!();
