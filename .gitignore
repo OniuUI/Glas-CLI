@@ -2,6 +2,7 @@ dist/
 artifacts/
 *.exe
 *.pdb
+*.res
 .vs/
 *.user
 *.suo

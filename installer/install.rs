@@ -70,8 +70,7 @@ fn interactive_install(args: &[String]) {
 
     ui::spin_run("Adding to PATH", || { platform::add_to_path(&install_dir) });
 
-    uninstall::write_glas_bat(&install_dir);
-    uninstall::write_uninstall_script(&install_dir, VERSION);
+    uninstall::write_uninstall_exe(&install_dir);
 
     if cfg!(windows) {
         ui::spin_run("Registering with Add/Remove Programs", || {
@@ -82,6 +81,9 @@ fn interactive_install(args: &[String]) {
     println!("{}", ui::divider(54));
     println!();
     println!("  {} Glas CLI v{} installed.", ui::green(ui::CHECK), VERSION);
+    println!();
+    println!("  {} {}", ui::dim("Next:"), ui::cyan("glas init my-app"));
+    println!("  {} {}", ui::dim("Uninstall:"), ui::dim(&format!("{}\\glas-uninstall.exe", install_dir)));
     println!();
     println!("  {} {}", ui::dim("Next:"), ui::cyan("glas init my-app"));
     println!();
@@ -110,8 +112,7 @@ fn install_silent(args: &[String]) {
     }
 
     let _ = platform::add_to_path(&install_dir);
-    uninstall::write_glas_bat(&install_dir);
-    uninstall::write_uninstall_script(&install_dir, VERSION);
+    uninstall::write_uninstall_exe(&install_dir);
     if cfg!(windows) { let _ = uninstall::register_uninstall(&install_dir, VERSION); }
 
     println!("glas-installer: installed to {}", install_dir);
