@@ -8,11 +8,10 @@ const MAIN_CSS: &str = "*,*::before,*::after{box-sizing:border-box;margin:0;padd
 const APP_JS: &str = "(function(){'use strict';GlassHouse.ready(function(){console.log('Glass House ready.');});})();";
 
 const GLASSHOUSE_RELEASES: &str = "https://github.com/OniuUI/GlassHouse/releases";
-const DEFAULT_GLASSHOUSE_VERSION: &str = "latest";
 const GLASSHOUSE_ASSET: &str = "glasshouse.zip";
 
 pub fn init(name: &str) {
-    init_with_version(name, DEFAULT_GLASSHOUSE_VERSION);
+    init_with_version(name, "latest");
 }
 
 pub fn init_with_version(name: &str, glasshouse_version: &str) {
@@ -44,10 +43,22 @@ pub fn init_with_version(name: &str, glasshouse_version: &str) {
     let _ = fs::write(root.join("glass.json"), &gjson);
 
     let gh_dir = root.join("glasshouse");
-    if let Err(e) = fetch_glasshouse(glasshouse_version, &gh_dir) {
-        eprintln!("glas: warning: could not fetch GlassHouse framework: {}", e);
-        eprintln!("glas: run 'glas install glasshouse' to install the framework.");
-        eprintln!("glas: or download manually from {}", GLASSHOUSE_RELEASES);
+
+    // Cache-first: if no specific version, try local cache
+    if glasshouse_version == "latest" {
+        if let Some(cache) = utils::find_cached_glasshouse() {
+            println!("  Using cached GlassHouse from installer...");
+            if let Err(e) = utils::copy_dir_recursive(Path::new(&cache), &gh_dir) {
+                eprintln!("glas: warning: cache copy failed: {}. Downloading...", e);
+                let _ = fetch_glasshouse(glasshouse_version, &gh_dir);
+            } else {
+                println!("  GlassHouse (cached) installed.");
+            }
+        } else {
+            let _ = fetch_glasshouse(glasshouse_version, &gh_dir);
+        }
+    } else {
+        let _ = fetch_glasshouse(glasshouse_version, &gh_dir);
     }
 
     println!("✓ Created Glass House project '{}'", name);
@@ -68,7 +79,13 @@ fn fetch_glasshouse(version: &str, dest_dir: &Path) -> Result<(), String> {
 
     println!("  Fetching GlassHouse {}...", version);
 
-    let url = if version == "latest" {
+    let real_version = if version == "latest" {
+        utils::latest_glasshouse_version()
+    } else {
+        version.to_string()
+    };
+
+    let url = if version == "latest" || version == "nightly" {
         format!(
             "{}/latest/download/{}",
             GLASSHOUSE_RELEASES, GLASSHOUSE_ASSET
@@ -81,10 +98,22 @@ fn fetch_glasshouse(version: &str, dest_dir: &Path) -> Result<(), String> {
     };
 
     let tmp = std::env::temp_dir().join(format!("glasshouse-{}.zip", version));
-    utils::fetch_release(&url, &tmp).map_err(|e| format!("download failed: {}", e))?;
-    utils::extract_zip(&tmp, dest_dir).map_err(|e| format!("extract failed: {}", e))?;
+    utils::fetch_release(&url, &tmp).map_err(|e| {
+        let msg = format!("download failed: {}", e);
+        eprintln!("glas: {}", msg);
+        eprintln!("glas: check available releases with 'glas glasshouse list'");
+        msg
+    })?;
+
+    utils::extract_zip(&tmp, dest_dir).map_err(|e| {
+        let msg = format!("extract failed: {}", e);
+        eprintln!("glas: {}", msg);
+        let _ = fs::remove_file(&tmp);
+        msg
+    })?;
+
     let _ = fs::remove_file(&tmp);
 
-    println!("  GlassHouse {} installed.", version);
+    println!("  GlassHouse {} installed.", real_version);
     Ok(())
 }

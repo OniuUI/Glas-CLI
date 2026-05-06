@@ -96,6 +96,78 @@ pub fn run_shell_status(cmd: &str) -> io::Result<()> {
     match status { Ok(s) if s.success() => Ok(()), Ok(s) => Err(io::Error::new(io::ErrorKind::Other, format!("exit code {}", s.code().unwrap_or(1)))), Err(e) => Err(e) }
 }
 
+pub fn find_cached_glasshouse() -> Option<String> {
+    let dir = if cfg!(windows) {
+        let local = std::env::var("LOCALAPPDATA").unwrap_or_default();
+        format!("{}\\GlassHouse\\glasshouse", local)
+    } else {
+        let home = std::env::var("HOME").unwrap_or_default();
+        format!("{}/.glasshouse/glasshouse", home)
+    };
+    let p = Path::new(&dir);
+    if p.exists() && p.is_dir() {
+        let mut count = 0;
+        if let Ok(entries) = fs::read_dir(p) { for _ in entries { count += 1; } }
+        if count > 0 { return Some(dir); }
+    }
+    None
+}
+
+pub fn fetch_github_releases(owner: &str, repo: &str) -> io::Result<Vec<(String, String, bool)>> {
+    let url = format!("https://api.github.com/repos/{}/{}/releases", owner, repo);
+    let tmp = std::env::temp_dir().join(format!("glas-{}-releases.json", repo));
+
+    let cmd = if cfg!(windows) {
+        format!(
+            "powershell -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '{}' -OutFile '{}' -Headers @{{'User-Agent'='glas/2.0'}}\"",
+            url, tmp.display()
+        )
+    } else {
+        format!("curl -L -H 'User-Agent: glas/2.0' -o '{}' '{}'", tmp.display(), url)
+    };
+    run_shell_status(&cmd)?;
+
+    let raw = fs::read_to_string(&tmp).unwrap_or_default();
+    let _ = fs::remove_file(&tmp);
+
+    if raw.is_empty() { return Ok(Vec::new()); }
+
+    let mut results = Vec::new();
+    if let Some(json::Value::Array(items)) = json::parse(&raw) {
+        for item in items {
+            if let json::Value::Object(pairs) = item {
+                let mut tag = String::new();
+                let mut name = String::new();
+                let mut prerelease = false;
+                for (k, v) in pairs {
+                    match k.as_str() {
+                        "tag_name" => { if let json::Value::String(s) = v { tag = s.clone(); } }
+                        "name" => { if let json::Value::String(s) = v { name = s.clone(); } }
+                        "prerelease" => { if let json::Value::Boolean(b) = v { prerelease = b; } }
+                        _ => {}
+                    }
+                }
+                if !tag.is_empty() {
+                    results.push((tag, name, prerelease));
+                }
+            }
+        }
+    }
+    Ok(results)
+}
+
+pub fn latest_glasshouse_version() -> String {
+    match fetch_github_releases("OniuUI", "GlassHouse") {
+        Ok(releases) => {
+            for (tag, _, prerelease) in &releases {
+                if !prerelease { return tag.clone(); }
+            }
+            releases.first().map(|r| r.0.clone()).unwrap_or_else(|| "v2.0.0".to_string())
+        }
+        Err(_) => "v2.0.0".to_string()
+    }
+}
+
 pub fn fetch_release(url: &str, dest: &Path) -> io::Result<()> {
     if let Some(parent) = dest.parent() { fs::create_dir_all(parent)?; }
     let cmd = if cfg!(windows) {

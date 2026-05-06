@@ -108,6 +108,10 @@ fn main() {
             let flags = commands::parse_test_flags(&args);
             commands::test_run(&args, &flags);
         }
+        "glasshouse" => {
+            let sub = args.get(2).cloned().unwrap_or_else(|| "list".to_string());
+            commands::glasshouse::run(&sub, &args[2..]);
+        }
         "help" | "--help" | "-h" => help(),
         "version" | "--version" | "-v" => println!("glas v{}", VERSION),
         other => {
@@ -149,6 +153,8 @@ fn help() {
     println!("  upgrade [<name>] [--major]   Upgrade packages (--major allows major bumps)");
     println!("  upgrade --dry-run             Preview upgrades without applying");
     println!("  run <script>                 Run a project script");
+    println!("  glasshouse list              List available GlassHouse releases");
+    println!("  glasshouse cache [--update]  Show or manage cached framework");
     println!("  help                         Show this help");
     println!("  version                      Show version");
     println!();
