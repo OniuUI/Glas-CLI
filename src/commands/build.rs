@@ -613,7 +613,7 @@ fn build_dev(cwd: &Path) {
 
 // ── Index HTML generation ──
 
-fn write_index_html(dist: &Path, sources: &[(String, String)], production: bool) {
+fn write_index_html(dist: &Path, _sources: &[(String, String)], production: bool) {
     if production {
         let html = format!(
             "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><title>Glass House</title><script src=\"glasshouse.bundle.js\"></script></head><body><div id=\"app\"></div></body></html>"

@@ -1,5 +1,7 @@
 # Glas CLI
 
+![Glas CLI](banner.png)
+
 Zero-dependency Rust CLI for GlassHouse projects. Single binary compiled with `rustc` — no cargo, no crates, no external dependencies. Scaffold projects, run dev servers, compile TypeScript, lint, test, build production bundles, and manage packages. Everything through one binary.
 
 Built for the [GlassHouse](https://github.com/OniuUI/GlassHouse) framework.

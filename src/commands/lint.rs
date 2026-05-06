@@ -46,7 +46,7 @@ pub fn parse_lint_flags(args: &[String]) -> LintFlags {
 }
 
 /// Main lint entry point — called from main.rs dispatch.
-pub fn run(args: &[String], flags: &LintFlags) {
+pub fn run(_args: &[String], flags: &LintFlags) {
     let cwd = env::current_dir().unwrap_or_default();
 
     if !cwd.join("glasshouse").exists() {
@@ -73,12 +73,11 @@ fn run_watch(cwd: &std::path::Path, flags: &LintFlags) {
     println!("  Press Ctrl+C to stop");
     println!();
 
-    let mut last_result = LintResult::default();
-
+    let mut _last_result = LintResult::default();
     // Initial lint
     let result = lint_project(cwd, flags);
     print_lint_result(&result, flags);
-    last_result = result;
+    _last_result = result;
 
     // Track file modification times
     let mut last_mtimes: Vec<(PathBuf, u64)> = Vec::new();
@@ -93,7 +92,7 @@ fn run_watch(cwd: &std::path::Path, flags: &LintFlags) {
         for fp in &current_files {
             if let Ok(m) = fs::metadata(fp) {
                 let s = m.len();
-                let modified = m
+                let _modified = m
                     .modified()
                     .map(|t| {
                         t.duration_since(std::time::UNIX_EPOCH)
@@ -114,7 +113,7 @@ fn run_watch(cwd: &std::path::Path, flags: &LintFlags) {
                 .iter()
                 .filter_map(|p| {
                     fs::metadata(p).ok().map(|m| {
-                        let mt = m
+                        let _mt = m
                             .modified()
                             .map(|t| {
                                 t.duration_since(std::time::UNIX_EPOCH)
@@ -130,7 +129,7 @@ fn run_watch(cwd: &std::path::Path, flags: &LintFlags) {
             println!("\n  ⟳ Re-linting...\n");
             let result = lint_project(cwd, flags);
             print_lint_result(&result, flags);
-            last_result = result;
+            _last_result = result;
         }
     }
 }
@@ -174,7 +173,7 @@ fn check_forbidden_js(cwd: &std::path::Path) -> Vec<LintViolation> {
                 if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
                     if ext == "js" {
                         // Check if it's inside a package's compiled output or test fixture
-                        let path_str = p.to_string_lossy();
+                        let _path_str = p.to_string_lossy();
                         // Skip .registry.json and similar meta files
                         if p.file_name()
                             .map_or(false, |n| n == ".registry.json")

@@ -56,7 +56,7 @@ pub fn parse_test_flags(args: &[String]) -> TestFlags {
 }
 
 /// Main test entry point — called from main.rs dispatch.
-pub fn run(args: &[String], flags: &TestFlags) {
+pub fn run(_args: &[String], flags: &TestFlags) {
     let cwd = env::current_dir().unwrap_or_default();
 
     if !cwd.join("glasshouse").exists() {
@@ -206,7 +206,7 @@ fn run_tests(
         module_names.push("test-runner");
     }
 
-    let modules = quickjs::load_glasshouse_modules(cwd, &module_names).unwrap_or_default();
+    let _modules = quickjs::load_glasshouse_modules(cwd, &module_names).unwrap_or_default();
 
     // Build the test wrapper JS
     let wrapper = build_test_js_wrapper(cwd, test_files, flags);
@@ -403,7 +403,7 @@ print('__GLAS_END__');
 }
 
 /// Parse the test output from QuickJS. It outputs markers around the JSON result.
-fn parse_test_output(output: &str, flags: &TestFlags) -> TestResult {
+fn parse_test_output(output: &str, _flags: &TestFlags) -> TestResult {
     let mut result = TestResult::default();
 
     // Look for the JSON result between markers
@@ -592,6 +592,7 @@ struct TestEntry {
 struct TestFailure {
     name: String,
     error: String,
+    #[allow(dead_code)]
     duration_ms: f64,
 }
 

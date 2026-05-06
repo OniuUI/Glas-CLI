@@ -271,7 +271,7 @@ pub fn audit(deep: bool, fix: bool) {
 }
 
 /// Check TypeScript compliance: no .js files in src/ or packages/.
-fn check_ts_compliance(cwd: &std::path::Path, issues: &mut u32, warnings: &mut u32) {
+fn check_ts_compliance(cwd: &std::path::Path, issues: &mut u32, _warnings: &mut u32) {
     let mut found_js = false;
 
     for dir_name in &["src", "packages"] {
