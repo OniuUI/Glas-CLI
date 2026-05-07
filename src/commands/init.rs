@@ -179,7 +179,7 @@ GlassHouse.define('glass-shine', ['shine'], function (Shine) {
         '  --clr-text: #111827; --clr-background: #ffffff; --clr-primary: #2563eb;',
         '  --clr-secondary: #7c3aed; --clr-muted: #6b7280; --clr-heading: #1f2937;',
         '  --clr-link: #2563eb; --clr-border: #e5e7eb; --clr-btn-text: #ffffff;',
-        '  --clr-error: #dc2626; --clr-success: #16a34a; --clr-warning: #f59e0b;',
+        '  --clr-error: #dc2626; --clr-success: #16a34a; --clr-warning: #b45309;',
         '  --clr-focus: #2563eb;',
         '  --font-body: system-ui, sans-serif; --font-heading: system-ui, sans-serif;',
         '  --font-mono: monospace; --font-base: 16px;',
@@ -228,7 +228,7 @@ GlassHouse.handler('validation', {
   factory: function() {
     return {
       isEmail: function(value) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        return new RegExp('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$').test(value);
       },
       isRequired: function(value) {
         return typeof value === 'string' && value.trim().length > 0;
